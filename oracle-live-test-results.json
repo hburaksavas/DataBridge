@@ -1,0 +1,671 @@
+{
+  "checks": [
+    {
+      "detail": {
+        "elapsedMs": 1259,
+        "database": "DATABRIDGE_TEST",
+        "user": "DBRIDGE_SRC",
+        "ok": true,
+        "service": "databridge_test"
+      },
+      "name": "Kaynak bağlantısı / kayıtlı DPAPI parolası",
+      "passed": true
+    },
+    {
+      "detail": {
+        "elapsedMs": 66,
+        "database": "DATABRIDGE_TEST",
+        "user": "DBRIDGE_TGT",
+        "ok": true,
+        "service": "databridge_test"
+      },
+      "name": "Hedef bağlantısı",
+      "passed": true
+    },
+    {
+      "detail": [
+        "KREDI",
+        "KREDI_HAREKET",
+        "MUSTERI",
+        "ODEME_PLANI",
+        "TAKSIT",
+        "TAKSIT_TAHSILAT",
+        "TEMINAT"
+      ],
+      "name": "Kaynak tabloları listeleniyor",
+      "passed": true
+    },
+    {
+      "detail": [
+        "KREDI",
+        "KREDI_HAREKET",
+        "MUSTERI",
+        "ODEME_PLANI",
+        "TAKSIT",
+        "TAKSIT_TAHSILAT",
+        "TEMINAT"
+      ],
+      "name": "Hedef tabloları listeleniyor",
+      "passed": true
+    },
+    {
+      "detail": [
+        {
+          "CHILD_OWNER": "DBRIDGE_SRC",
+          "CHILD_TABLE": "KREDI",
+          "CONSTRAINT_NAME": "FK_KREDI_MUSTERI",
+          "PARENT_OWNER": "DBRIDGE_SRC",
+          "PARENT_TABLE": "MUSTERI",
+          "STATUS": "ENABLED",
+          "VALIDATED": "VALIDATED",
+          "COLUMN_PAIRS": [
+            {
+              "parent": "MUSTERI_ID",
+              "child": "MUSTERI_ID"
+            }
+          ],
+          "SOURCE": "FK",
+          "DIRECTION": "PARENT"
+        },
+        {
+          "CHILD_OWNER": "DBRIDGE_SRC",
+          "CHILD_TABLE": "ODEME_PLANI",
+          "CONSTRAINT_NAME": "FK_PLAN_KREDI",
+          "PARENT_OWNER": "DBRIDGE_SRC",
+          "PARENT_TABLE": "KREDI",
+          "STATUS": "ENABLED",
+          "VALIDATED": "VALIDATED",
+          "COLUMN_PAIRS": [
+            {
+              "parent": "KREDI_ID",
+              "child": "KREDI_ID"
+            }
+          ],
+          "SOURCE": "FK",
+          "DIRECTION": "CHILD"
+        },
+        {
+          "CHILD_OWNER": "DBRIDGE_SRC",
+          "CHILD_TABLE": "TEMINAT",
+          "CONSTRAINT_NAME": "FK_TEMINAT_KREDI",
+          "PARENT_OWNER": "DBRIDGE_SRC",
+          "PARENT_TABLE": "KREDI",
+          "STATUS": "ENABLED",
+          "VALIDATED": "VALIDATED",
+          "COLUMN_PAIRS": [
+            {
+              "parent": "KREDI_ID",
+              "child": "KREDI_ID"
+            }
+          ],
+          "SOURCE": "FK",
+          "DIRECTION": "CHILD"
+        }
+      ],
+      "name": "KREDI doğrudan FK keşfi",
+      "passed": true
+    },
+    {
+      "detail": "PARENT",
+      "name": "Üst kayıt yönü: MUSTERI",
+      "passed": true
+    },
+    {
+      "detail": "CHILD",
+      "name": "Alt kayıt yönleri: ODEME_PLANI / TEMINAT",
+      "passed": true
+    },
+    {
+      "detail": "KREDI_HAREKET kapsam dışında",
+      "name": "FK olmayan ilişki uydurulmuyor",
+      "passed": true
+    },
+    {
+      "detail": [
+        {
+          "parent": "PLAN_ID",
+          "child": "PLAN_ID"
+        },
+        {
+          "parent": "TAKSIT_NO",
+          "child": "TAKSIT_NO"
+        }
+      ],
+      "name": "Bileşik FK kolon sırası",
+      "passed": true
+    },
+    {
+      "detail": "DBRIDGE_LOCAL",
+      "name": "TNS HTTP dosya içe aktarma",
+      "passed": true
+    },
+    {
+      "detail": {
+        "elapsedMs": 57,
+        "database": "DATABRIDGE_TEST",
+        "user": "DBRIDGE_SRC",
+        "ok": true,
+        "service": "databridge_test"
+      },
+      "name": "TNS descriptor ile gerçek Oracle bağlantısı",
+      "passed": true
+    },
+    {
+      "detail": "2bb4aabc-ed88-4b8e-a79d-8f0f702a59ea",
+      "name": "Gerçek FK keşfinden senaryo kaydı",
+      "passed": true
+    },
+    {
+      "detail": "HTTP 422 / ORA-01017",
+      "name": "Yanlış parola kullanıcıya Oracle hatası olarak dönüyor",
+      "passed": true
+    },
+    {
+      "detail": "ORA-01456",
+      "name": "Salt okunur transaction yazmayı reddediyor (JDBC canlı testi)",
+      "passed": true
+    },
+    {
+      "detail": [
+        {
+          "table": "MUSTERI",
+          "selected": 2,
+          "primaryKey": [
+            "MUSTERI_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "KREDI",
+          "selected": 2,
+          "primaryKey": [
+            "KREDI_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "ODEME_PLANI",
+          "selected": 2,
+          "primaryKey": [
+            "PLAN_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "TAKSIT",
+          "selected": 24,
+          "primaryKey": [
+            "PLAN_ID",
+            "TAKSIT_NO"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "TAKSIT_TAHSILAT",
+          "selected": 1,
+          "primaryKey": [
+            "TAHSILAT_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "TEMINAT",
+          "selected": 2,
+          "primaryKey": [
+            "TEMINAT_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        }
+      ],
+      "name": "Aktarım önizlemesi: 2 aktif kredi ve ilişkili 33 kayıt",
+      "passed": true
+    },
+    {
+      "detail": {
+        "id": "1ddc9566-ca64-4887-afb8-c38ff96be5cf",
+        "status": "COMPLETED",
+        "source": "Oracle 26ai · Kaynak",
+        "target": "Oracle 26ai · Hedef",
+        "startedAt": "2026-11-14T23:26:58.181662900Z",
+        "total": 33,
+        "processed": 33,
+        "inserted": 0,
+        "skipped": 33,
+        "table": "TEMINAT",
+        "committed": true,
+        "tables": [
+          {
+            "table": "MUSTERI",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          },
+          {
+            "table": "KREDI",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          },
+          {
+            "table": "ODEME_PLANI",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          },
+          {
+            "table": "TAKSIT",
+            "processed": 24,
+            "inserted": 0,
+            "skipped": 24
+          },
+          {
+            "table": "TAKSIT_TAHSILAT",
+            "processed": 1,
+            "inserted": 0,
+            "skipped": 1
+          },
+          {
+            "table": "TEMINAT",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          }
+        ],
+        "message": "Aktarım tamamlandı.",
+        "keyPolicies": {
+          "KREDI": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "TAKSIT_TAHSILAT": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "MUSTERI": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "TEMINAT": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "TAKSIT": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "ODEME_PLANI": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        "finishedAt": "2026-11-14T23:26:58.632187400Z"
+      },
+      "name": "Uygulama API ile gerçek Oracle aktarımı ve commit",
+      "passed": true
+    },
+    {
+      "detail": {
+        "id": "af7dc69c-916b-463f-8ae1-46fd78d37bef",
+        "status": "COMPLETED",
+        "source": "Oracle 26ai · Kaynak",
+        "target": "Oracle 26ai · Hedef",
+        "startedAt": "2026-11-14T23:26:59.793001400Z",
+        "total": 33,
+        "processed": 33,
+        "inserted": 0,
+        "skipped": 33,
+        "table": "TEMINAT",
+        "committed": true,
+        "tables": [
+          {
+            "table": "MUSTERI",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          },
+          {
+            "table": "KREDI",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          },
+          {
+            "table": "ODEME_PLANI",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          },
+          {
+            "table": "TAKSIT",
+            "processed": 24,
+            "inserted": 0,
+            "skipped": 24
+          },
+          {
+            "table": "TAKSIT_TAHSILAT",
+            "processed": 1,
+            "inserted": 0,
+            "skipped": 1
+          },
+          {
+            "table": "TEMINAT",
+            "processed": 2,
+            "inserted": 0,
+            "skipped": 2
+          }
+        ],
+        "message": "Aktarım tamamlandı.",
+        "keyPolicies": {
+          "KREDI": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "TAKSIT_TAHSILAT": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "MUSTERI": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "TEMINAT": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "TAKSIT": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          },
+          "ODEME_PLANI": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        "finishedAt": "2026-11-14T23:27:00.363986300Z"
+      },
+      "name": "Tekrarlı aktarımda 33 mevcut kayıt atlandı",
+      "passed": true
+    },
+    {
+      "detail": "8ed0b0de-8312-49a0-91cd-c8af657d7bf2",
+      "name": "v3 PK politikası senaryo API kaydı",
+      "passed": true
+    },
+    {
+      "detail": "d9e5452d-aeda-4602-a0c5-95d56a982273",
+      "name": "Diagram yerleşimi ve manuel ilişki kalıcılığı",
+      "passed": true
+    },
+    {
+      "detail": [
+        {
+          "table": "MUSTERI",
+          "selected": 2,
+          "primaryKey": [
+            "MUSTERI_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "KREDI",
+          "selected": 2,
+          "primaryKey": [
+            "KREDI_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "ODEME_PLANI",
+          "selected": 2,
+          "primaryKey": [
+            "PLAN_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "TAKSIT",
+          "selected": 24,
+          "primaryKey": [
+            "PLAN_ID",
+            "TAKSIT_NO"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "TAKSIT_TAHSILAT",
+          "selected": 1,
+          "primaryKey": [
+            "TAHSILAT_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "TEMINAT",
+          "selected": 2,
+          "primaryKey": [
+            "TEMINAT_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        },
+        {
+          "table": "KREDI_HAREKET",
+          "selected": 2,
+          "primaryKey": [
+            "HAREKET_ID"
+          ],
+          "keyPolicy": {
+            "mode": "KEEP",
+            "column": "",
+            "sequence": "",
+            "start": 1,
+            "increment": 1,
+            "groupColumns": [],
+            "businessColumns": [],
+            "onConflict": "SKIP"
+          }
+        }
+      ],
+      "name": "Manuel KREDI_NO ilişkisi ile 35 kayıt önizlemesi",
+      "passed": true
+    },
+    {
+      "detail": [
+        {
+          "reason": "Tablo/kolon adı eşleşmesi",
+          "column": "KREDI_ID",
+          "sequence": "SEQ_KREDI",
+          "confidence": "MEDIUM",
+          "mode": "SEQUENCE"
+        }
+      ],
+      "name": "Gerçek hedef metadata ile SEQ_KREDI isim önerisi",
+      "passed": true
+    }
+  ],
+  "timestamp": "2026-11-15T02:27:01.8715714+03:00",
+  "oracle": "Oracle AI Database 26ai Free 23.26.3.0.0",
+  "scope": "Gerçek bağlantı, metadata, TNS, FK keşfi, kalıcılık ve Oracle → Oracle ilişkili veri aktarımı.",
+  "sourceSchema": "DBRIDGE_SRC",
+  "service": "localhost:1521/databridge_test",
+  "targetSchema": "DBRIDGE_TGT"
+}

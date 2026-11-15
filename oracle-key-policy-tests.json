@@ -1,0 +1,29 @@
+{
+  "checks" : [ {
+    "status" : "PASS",
+    "test" : "sequenceSuggestionsDoNotConsumeValues"
+  }, {
+    "status" : "PASS",
+    "test" : "sequenceRemapsNestedAndCompositeForeignKeys"
+  }, {
+    "status" : "PASS",
+    "test" : "maximumAndGroupedMaximumUseMappedParentKeys"
+  }, {
+    "status" : "PASS",
+    "test" : "businessKeyReusesActualTargetIdentity"
+  }, {
+    "status" : "PASS",
+    "test" : "identityValuesAreReadAndMappedToChildren"
+  }, {
+    "status" : "PASS",
+    "test" : "sourceCollisionErrorsByDefaultInsteadOfSkipping"
+  }, {
+    "status" : "PASS",
+    "test" : "concurrentMaximumCollisionRollsBackOwnEarlierInsert"
+  } ],
+  "passed" : 7,
+  "sourceSchema" : "DBS_A3396207",
+  "targetSchema" : "DBX_A3396207",
+  "timestamp" : "2026-11-14T22:38:01.522637700Z",
+  "failed" : 0
+}

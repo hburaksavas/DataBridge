@@ -1,0 +1,13 @@
+# Yalnızca yerel dosya içe aktarma denemesi içindir; canlı veritabanı değildir.
+DEMO_TEST =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))
+    (CONNECT_DATA = (SERVICE_NAME = DEMO_TEST)))
+
+DEMO_RAC, DEMO_RAC.WORLD =
+  (DESCRIPTION =
+    (FAILOVER = ON)
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = node1.example.invalid)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = node2.example.invalid)(PORT = 1521)))
+    (CONNECT_DATA = (SERVICE_NAME = DEMO_RAC)))

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+<title id="title">DataBridge — connected data</title>
+<rect x="8" y="8" width="240" height="240" rx="56" fill="#3447AE"/>
+<path d="M58 182V148C58 60 198 60 198 148V182" fill="none" stroke="#F7FAFF" stroke-width="14" stroke-linecap="round"/>
+<path d="M128 98V150" fill="none" stroke="#A9BDF5" stroke-width="8" stroke-linecap="round"/>
+<path d="M76 160H178M166 148L178 160L166 172" fill="none" stroke="#76E0D1" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="40" y="142" width="36" height="36" rx="10" fill="#F7FAFF"/>
+<rect x="180" y="142" width="36" height="36" rx="10" fill="#F7FAFF"/>
+<path d="M50 154H66M50 164H61M190 154H206M190 164H201" fill="none" stroke="#3447AE" stroke-width="4" stroke-linecap="round"/>
+<rect x="112" y="66" width="32" height="32" rx="10" fill="#FFAD86"/>
+</svg>
