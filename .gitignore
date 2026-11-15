@@ -1,25 +1,15 @@
+# Generated build output and dependencies.
 **/bin/
 **/obj/
-java-prototype/tools/
-java-prototype/build/
-java-prototype/dist/
-java-prototype/latest-build.txt
-tools/
-app/target/
-frontend/node_modules/
-frontend/tsconfig.tsbuildinfo
-dist/
-latest-build.txt
-*.log
-.local/
-
-# Generated files in archived prototypes as well as the active application.
 **/tools/
 **/build/
 **/dist/
-**/latest-build.txt
 **/node_modules/
 **/target/
+**/latest-build.txt
+*.tsbuildinfo
+*.log
+.local/
 
 # Local credentials and application state.
 .env

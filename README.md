@@ -2,7 +2,7 @@
 
 Oracle üretim verisinden test veri kümeleri hazırlamak için Windows masaüstü uygulaması.
 
-Aktif teknoloji kararı: **Java 21 + Spring Boot + React/TypeScript + SWT/WebView2**. Eski C# ve JavaFX prototipleri `archive` altında tutulur; aktif derlemeye dahil değildir.
+Aktif teknoloji kararı: **Java 21 + Spring Boot + React/TypeScript + SWT/WebView2**. İptal edilmiş C# ve JavaFX prototipleri Git geçmişinde bulunabilir.
 
 ## Çalıştırma
 
@@ -58,7 +58,6 @@ Yerel Oracle AI Database 26ai Free 23.26.3.0.0 üzerinde gerçek bağlantı ve m
 - `app/`: Spring Boot REST API, Oracle JDBC, SQLite, importerlar ve SWT launcher.
 - `samples/`: Gerçek veritabanına bağlanmayan örnek tanımlar.
 - `build.ps1`: Doğrulama ve Windows paketleme.
-- `archive/`: İptal edilen prototipler.
 
 Masaüstü pencere SWT `Browser(SWT.EDGE)` kullanır; arayüz derlenip Spring Boot ile aynı origin üzerinden sunulur. Oracle işlemleri servis katmanındadır; React doğrudan Oracle'a erişmez.
 
@@ -98,7 +97,7 @@ Aktarım geçmişi yerel SQLite'ta saklanır; satır içerikleri veya parolalar 
 
 ## v0.5 — PK kararları
 
-Geliştirme kararları PLAN.md içinde tutulur. Veri Aktarımı ekranında tablo seçilip sağdaki **PK kararı** sekmesinden her tabloya yöntem seçilir. Hedef bağlantı seçilip metadata önerileri istenebilir; hedef bağlantının kimliği/parolası senaryo dosyasına eklenmez. Yeni senaryolar v3 JSON biçimindedir; v1/v2 senaryolar açılır ve aksi açıkça seçilmedikçe yeni güvenli varsayılan KEEP/ERROR kullanılır.
+Geliştirme kararları PLAN.md içinde tutulur. Veri Aktarımı ekranında tablo seçilip sağdaki **Key strategy** sekmesinden her tabloya yöntem seçilir. Hedef bağlantı seçilip metadata önerileri istenebilir; hedef bağlantının kimliği/parolası senaryo dosyasına eklenmez. Yeni senaryolar v3 JSON biçimindedir; v1/v2 senaryolar açılır ve aksi açıkça seçilmedikçe yeni güvenli varsayılan KEEP/ERROR kullanılır.
 
 | Yöntem | Davranış |
 |---|---|

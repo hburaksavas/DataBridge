@@ -2,7 +2,6 @@ package com.databridge;
 
 import java.sql.SQLException;
 import java.util.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

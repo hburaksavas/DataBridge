@@ -767,22 +767,6 @@ td button {
   border: 1px solid #e5eaf3;
   border-radius: 7px;
 }
-.scenario-layout {
-  display: grid;
-  grid-template-columns: minmax(340px, 1fr) minmax(360px, 1.05fr);
-  gap: 20px;
-  margin-bottom: 23px;
-}
-.scenario-form .form-body {
-  gap: 16px;
-}
-.scenario-form .form-grid {
-  grid-template-columns: 1fr 1fr;
-}
-.scenario-form button:not(.primary) {
-  align-self: flex-start;
-  font-size: 11px;
-}
 .full {
   width: 100%;
 }
@@ -793,40 +777,6 @@ td button {
   padding: 4px 7px;
   font-size: 10px;
   color: #7a91b1;
-}
-.root-table {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 14px;
-  background: #edf3ff;
-  color: #446eab;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.relation-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px 0;
-  border-bottom: 1px solid #edf1f7;
-  cursor: pointer;
-}
-.relation-row strong {
-  display: block;
-  color: #546e90;
-  font-size: 12px;
-}
-.relation-row small {
-  display: block;
-  color: #91a1b7;
-  font-size: 10px;
-  margin: 6px 0;
-}
-.relation-row code {
-  font-size: 10px;
-  color: #8090a9;
 }
 .tag {
   margin-left: auto;
@@ -976,31 +926,6 @@ td button {
     padding: 11px 6px;
   }
 }
-.transfer-layout {
-  display: grid;
-  grid-template-columns: minmax(330px, 1fr) minmax(360px, 1.1fr);
-  gap: 20px;
-  margin-bottom: 22px;
-  align-items: start;
-}
-.transfer-fields {
-  border: 0;
-  margin: 0;
-  min-width: 0;
-}
-.preview-route {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  padding: 20px;
-  color: #728bad;
-  font-size: 11px;
-  border-bottom: 1px solid #edf1f7;
-}
-.transfer-monitor {
-  margin-bottom: 22px;
-}
 .progress-track {
   height: 8px;
   background: #e9eff8;
@@ -1011,83 +936,6 @@ td button {
   height: 100%;
   background: #3569db;
   transition: width 0.3s;
-}
-.job-metrics {
-  display: flex;
-  gap: 30px;
-  color: #92a0b4;
-  font-size: 11px;
-}
-.job-metrics strong {
-  display: block;
-  font-size: 21px;
-  color: #35557e;
-  margin-top: 8px;
-}
-.relation-row button {
-  padding: 5px 7px;
-  font-size: 9px;
-}
-.relation-row .tag {
-  margin-left: auto;
-}
-.transfer-fields .read-only {
-  font-size: 10px;
-  line-height: 1.8;
-}
-.key-policy-panel {
-  margin: 20px 0;
-}
-.key-suggestion-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 15px;
-  align-items: end;
-}
-.key-policy-card {
-  border: 1px solid #e2e9f3;
-  border-radius: 8px;
-  padding: 18px;
-  background: #fcfdff;
-}
-.key-table-title {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 16px;
-  font-size: 12px;
-  color: #456080;
-}
-.key-table-title span {
-  color: #90a0b7;
-  font-size: 10px;
-}
-.key-suggestions {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-top: 12px;
-}
-.key-suggestions button {
-  justify-content: space-between;
-  text-align: left;
-  background: #f1f6ff;
-  border-color: #dce7fa;
-  font-size: 11px;
-}
-.key-suggestions small {
-  display: block;
-  color: #8a9cb5;
-  font-size: 10px;
-  margin-top: 5px;
-}
-.key-save-action {
-  display: flex;
-  justify-content: flex-end;
-  margin: 0 0 20px;
-}
-.key-policy-card .helper {
-  margin-top: 10px;
 }
 /* Compact desktop workbench */
 :root {

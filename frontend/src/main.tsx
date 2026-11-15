@@ -2,38 +2,28 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Database,
-  Workflow,
-  LayoutDashboard,
-  Settings,
   Plus,
   Folder,
   ChevronRight,
   ChevronDown,
   Upload,
   Check,
-  ShieldCheck,
   PlugZap,
   Search,
-  ArrowRight,
-  RefreshCw,
   Trash2,
   Save,
   FileCode2,
-  Download,
   Network,
   AlertCircle,
   X,
-  HardDrive,
   LockKeyhole,
-  Server,
-  Table2,
 } from "lucide-react";
 import "./style.css";
 import "./soft.css";
 import { Workbench } from "./Workbench";
 import { ErrorDetails } from "./ErrorDetails";
 import { failureMessage, networkFailure } from "./errors";
-import { KeyPolicies, type KeyPolicy } from "./KeyPolicies";
+import type { KeyPolicy } from "./keyPolicy";
 
 export type Profile = {
   id?: string;
@@ -65,13 +55,6 @@ export type Relation = {
   STATUS: string;
   VALIDATED: string;
   COLUMN_PAIRS: Pair[];
-};
-type Discovery = {
-  owner: string;
-  table: string;
-  columns: Record<string, unknown>[];
-  relations: Relation[];
-  warnings: string[];
 };
 export type Scenario = {
   id?: string;
@@ -171,19 +154,6 @@ function App() {
     [locations, setLocations] = useState<{ path: string; exists: boolean }[]>(
       [],
     );
-  const [sourceId, setSourceId] = useState(""),
-    [schema, setSchema] = useState(""),
-    [sourcePassword, setSourcePassword] = useState(""),
-    [tables, setTables] = useState<Record<string, unknown>[]>([]),
-    [table, setTable] = useState(""),
-    [discovery, setDiscovery] = useState<Discovery | null>(null),
-    [included, setIncluded] = useState<string[]>([]),
-    [scenarioName, setScenarioName] = useState(""),
-    [condition, setCondition] = useState(""),
-    [limit, setLimit] = useState(100),
-    [scenarioId, setScenarioId] = useState<string | undefined>();
-  const [settings, setSettings] = useState<Record<string, unknown>>({});
-  const [keyPolicies, setKeyPolicies] = useState<Record<string, KeyPolicy>>({});
   async function reload() {
     const [p, s] = await Promise.all([
       api<Profile[]>("/connections"),
@@ -194,9 +164,6 @@ function App() {
   }
   useEffect(() => {
     reload().catch((e) => setError(e.message));
-    api<Record<string, unknown>>("/status")
-      .then(setSettings)
-      .catch(() => {});
     api<typeof locations>("/tns/locations")
       .then(setLocations)
       .catch(() => {});
@@ -359,155 +326,6 @@ function App() {
           " connections saved. Complete the username and password.",
       );
     });
-  }
-  async function loadTables() {
-    await run(async () => {
-      if (!sourceId) throw Error("Select a source connection.");
-      const rows = await api<Record<string, unknown>[]>(
-        "/connections/" + sourceId + "/tables",
-        { password: sourcePassword, schema },
-      );
-      setTables(rows);
-      setTable("");
-      setDiscovery(null);
-      if (!rows.length) setToast("No accessible tables found in this schema.");
-    });
-  }
-  async function discover() {
-    await run(async () => {
-      if (!table) throw Error("Select a root table.");
-      const row = tables.find((t) => t.TABLE_NAME === table);
-      const r = await api<Discovery>("/connections/" + sourceId + "/discover", {
-        password: sourcePassword,
-        schema: row?.OWNER || schema,
-        table,
-      });
-      setDiscovery(r);
-      setIncluded(
-        r.relations
-          .filter((r) => r.STATUS === "ENABLED" && r.VALIDATED === "VALIDATED")
-          .map((r) => r.CHILD_OWNER + "." + r.CONSTRAINT_NAME),
-      );
-      if (!scenarioName) setScenarioName(table + " and related data");
-    });
-  }
-  async function saveScenario() {
-    await run(async () => {
-      if (!discovery) throw Error("Discover schema relationships first.");
-      if (!Number.isInteger(limit) || limit < 1)
-        throw Error("The row limit must be a positive integer.");
-      for (const p of Object.values(keyPolicies)) {
-        if (
-          p.mode === "MAX" &&
-          (!Number.isSafeInteger(p.start) || !Number.isSafeInteger(p.increment))
-        )
-          throw Error("MAX start and increment must be safe integers.");
-      }
-      await api("/scenarios", {
-        id: scenarioId,
-        name: scenarioName,
-        owner: discovery.owner,
-        table: discovery.table,
-        condition,
-        limit,
-        sourceId,
-        keyPolicies: Object.fromEntries(
-          Object.entries(keyPolicies).filter(
-            ([t]) =>
-              t === discovery.table ||
-              discovery.relations.some(
-                (r) =>
-                  included.includes(r.CHILD_OWNER + "." + r.CONSTRAINT_NAME) &&
-                  (r.CHILD_TABLE === t || r.PARENT_TABLE === t),
-              ),
-          ),
-        ),
-        relations: discovery.relations.filter((r) =>
-          included.includes(r.CHILD_OWNER + "." + r.CONSTRAINT_NAME),
-        ),
-      });
-      await reload();
-      setToast("Scenario saved.");
-    });
-  }
-  async function expandRelation(relation: Relation) {
-    await run(async () => {
-      if (!discovery || relation.DIRECTION !== "CHILD") return;
-      const result = await api<Discovery>(
-        "/connections/" + sourceId + "/discover",
-        {
-          password: sourcePassword,
-          schema: relation.CHILD_OWNER,
-          table: relation.CHILD_TABLE,
-        },
-      );
-      const known = new Set(
-        discovery.relations.map((r) => r.CHILD_OWNER + "." + r.CONSTRAINT_NAME),
-      );
-      const additional = result.relations.filter(
-        (r) =>
-          r.DIRECTION === "CHILD" &&
-          !known.has(r.CHILD_OWNER + "." + r.CONSTRAINT_NAME),
-      );
-      setDiscovery({
-        ...discovery,
-        relations: [...discovery.relations, ...additional],
-      });
-      setToast(
-        additional.length +
-          " child relationships found. Select those to include.",
-      );
-    });
-  }
-  function exportScenario(s: Scenario) {
-    const { sourceId: _, ...shared } = s;
-    const blob = new Blob([JSON.stringify(shared, null, 2)], {
-      type: "application/json",
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "databridge-scenario.json";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  }
-  async function importScenario(file: File) {
-    await run(async () => {
-      if (file.size > 1000000)
-        throw Error("Scenario files must be 1 MB or smaller.");
-      const s = JSON.parse(await file.text());
-      if (
-        ![1, 2].includes(s.version) ||
-        !s.name ||
-        !s.owner ||
-        !s.table ||
-        !Array.isArray(s.relations)
-      )
-        throw Error("Choose a valid v1/v2 scenario file.");
-      await api("/scenarios", { ...s, id: undefined, sourceId: undefined });
-      await reload();
-      setToast("Scenario imported. Source connection was not shared.");
-    });
-  }
-  function editScenario(s: Scenario) {
-    setScenarioId(s.id);
-    setKeyPolicies(s.keyPolicies || {});
-    setScenarioName(s.name);
-    setCondition(s.condition || "");
-    setLimit(s.limit || 100);
-    setSourceId(s.sourceId || "");
-    setSchema(s.owner);
-    setTable(s.table);
-    setTables([{ OWNER: s.owner, TABLE_NAME: s.table }]);
-    setDiscovery({
-      owner: s.owner,
-      table: s.table,
-      relations: s.relations,
-      columns: [],
-      warnings: ["Saved scenario loaded. Rediscover to refresh the schema."],
-    });
-    setIncluded(
-      s.relations.map((r) => r.CHILD_OWNER + "." + r.CONSTRAINT_NAME),
-    );
   }
   const folders = [...new Set(profiles.map((p) => p.folder))];
   const visible = profiles.filter((p) =>

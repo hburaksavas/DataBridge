@@ -14,7 +14,6 @@ import {
   Flag,
   KeyRound,
   Table2,
-  LockKeyhole,
   Square,
   ChevronDown,
   History,
@@ -30,11 +29,10 @@ import {
   orient,
   edgeKey,
   type DiagramData,
-  type Point,
 } from "./Diagram";
 import { ScenarioPicker } from "./ScenarioPicker";
 import { ErrorDetails } from "./ErrorDetails";
-import { defaultPolicy, type KeyPolicy } from "./KeyPolicies";
+import { defaultPolicy, type KeyPolicy } from "./keyPolicy";
 type Api = <T>(path: string, body?: unknown, method?: string) => Promise<T>;
 type Meta = {
   owner: string;
