@@ -36,7 +36,7 @@ Script gerektiğinde Maven 3.9.9 indirip SHA512 kontrolü yapar; `npm ci`, TypeS
 
 **Henüz tüm PL/SQL Developer export biçimleriyle doğrulanmış bir importer değildir.** Resmi belgelerde bağlantı tanımlarının dışa aktarımı anlatılıyor, ancak dosya şeması yayınlanmıyor.
 
-Şu an okunabilir INI/XML kayıtları için metadata adaptörü bulunur. Name/DisplayName, Username/LogonUsername, Database/LogonDatabase, Folder ve ConnectAs/Role alanları tanınır. INI'de ayrı bağlantı bölümleri ve `Name0`, `Database0` gibi indeksli alanlar desteklenir. XML'de connection/item/logon elementleri ve okunabilir alanlar desteklenir. `samples/readable-connections.ini` yalnızca adaptör örneğidir, PL/SQL Developer'dan alınmış gerçek export değildir.
+Şu an okunabilir INI/XML kayıtları için metadata adaptörü bulunur. Name/DisplayName, Username/LogonUsername, Database/LogonDatabase, Folder ve ConnectAs/Role alanları tanınır. INI'de ayrı bağlantı bölümleri ve `Name0`, `Database0` gibi indeksli alanlar desteklenir. XML'de connection/item/logon elementleri ve okunabilir alanlar desteklenir.
 
 Şifreli, ikili veya tanınmayan dosyalar açıklayıcı hata verir. Parolalar ve initialization scriptleri alınmaz. TNS aliasları önceden içe aktarılan TNS tanımlarıyla eşleştirilir; eşleşmeyen bağlantılar kaydedilmeden önce çözümlenmelidir. Kesin sürüm uyumluluğu için anonimleştirilmiş gerçek export örneği gerekir.
 
@@ -56,7 +56,6 @@ Yerel Oracle AI Database 26ai Free 23.26.3.0.0 üzerinde gerçek bağlantı ve m
 
 - `frontend/`: React, TypeScript, Vite ve CSS.
 - `app/`: Spring Boot REST API, Oracle JDBC, SQLite, importerlar ve SWT launcher.
-- `samples/`: Gerçek veritabanına bağlanmayan örnek tanımlar.
 - `build.ps1`: Doğrulama ve Windows paketleme.
 
 Masaüstü pencere SWT `Browser(SWT.EDGE)` kullanır; arayüz derlenip Spring Boot ile aynı origin üzerinden sunulur. Oracle işlemleri servis katmanındadır; React doğrudan Oracle'a erişmez.

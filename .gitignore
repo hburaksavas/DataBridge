@@ -39,3 +39,6 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Local connection import examples.
+/samples/
