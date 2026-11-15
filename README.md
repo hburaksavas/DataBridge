@@ -4,6 +4,88 @@ Oracle üretim verisinden test veri kümeleri hazırlamak için Windows masaüst
 
 Aktif teknoloji kararı: **Java 21 + Spring Boot + React/TypeScript + SWT/WebView2**. İptal edilmiş C# ve JavaFX prototipleri Git geçmişinde bulunabilir.
 
+## Geliştirici için ilk kurulum
+
+Desteklenen geliştirme ortamı **Windows x64**'tür. SWT ve Windows DPAPI kullanıldığı için masaüstü uygulamasını macOS, Linux veya WSL üzerinden çalıştırmak desteklenmez.
+
+Önce şu araçları kurun ve yeni bir PowerShell penceresi açın:
+
+- Git.
+- **JDK 21 x64**: Yalnızca JRE yeterli değildir; `javac` ve `jpackage` bulunmalıdır. JDK'nın `bin` klasörünü PATH'e ekleyin.
+- **Node.js 22.12+** ve beraberindeki npm.
+- **Microsoft Edge WebView2 Runtime x64**: Masaüstü arayüzü için gereklidir.
+
+Aşağıdaki komutlarla araçları kontrol edin. `java` ve `javac` çıktılarının ikisi de 21 olmalıdır; makinede birden fazla Java kuruluysa PATH sırasını kontrol edin.
+
+```powershell
+git --version
+java -version
+javac -version
+jpackage --version
+node --version
+npm.cmd --version
+```
+
+### Klonlama, derleme ve ilk çalıştırma
+
+```powershell
+git clone https://github.com/hburaksavas/DataBridge.git
+Set-Location DataBridge
+.\build.ps1
+```
+
+İlk derlemede npm ve Maven bağımlılıklarının indirilmesi için internet erişimi gerekir. Maven'ı ayrıca kurmanız gerekmez; script Maven 3.9.9'u `tools/` altına indirip SHA512 kontrolünü yapar. Script `JAVA_HOME` değerini PATH'te bulunan `javac.exe` üzerinden ayarlar; ön yüzü derler, Java testlerini çalıştırır ve Windows uygulama paketini üretir.
+
+PowerShell script çalıştırmayı execution policy nedeniyle engellerse, kurum politikanız izin veriyorsa yalnızca o PowerShell oturumu için aşağıdaki komutu çalıştırıp derlemeyi yeniden başlatın:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\build.ps1
+```
+
+Derleme tamamlandıktan sonra, aynı repo klasöründen uygulamayı açın:
+
+```powershell
+$applicationDirectory = (Get-Content -LiteralPath .\latest-build.txt -Raw).Trim()
+Start-Process -FilePath (Join-Path $applicationDirectory 'DataBridge.exe')
+```
+
+Paket `dist/<tarih-saat>/DataBridge/` altında oluşur. `latest-build.txt` son başarılı paketin konumunu tutar. Kaynak kod değişikliklerinden sonra `.\build.ps1` çalıştırıp yeni paketi açın.
+
+### Veritabanı bağlantısını hazırlama
+
+Uygulamayı derlemek ve açmak için Oracle kurulumu gerekmez. Gerçek tablo keşfi ve veri aktarımı için ağ üzerinden erişebileceğiniz bir Oracle veritabanı gerekir. Oracle JDBC sürücüsü Maven tarafından indirilir; Oracle Client kurulumu zorunlu değildir.
+
+1. Uygulamada kaynak bağlantıyı ekleyin: sunucu, port, servis adı, kullanıcı ve parola bilgilerini kendi ortamınızdan girin. TNS kullanıyorsanız kendi `tnsnames.ora` dosyanızı içe aktarın.
+2. Kaynak hesabın aktarılacak tabloları okuyabildiğini doğrulayın ve bağlantı testini çalıştırın. Üretim kaynağını salt okunur olarak tanımlayın.
+3. Aktarım yapacaksanız ayrı, üretim olmayan ve yazılabilir bir hedef bağlantı ekleyin. Hedefte uyumlu tablo, kolon, PK ve FK yapıları önceden bulunmalıdır; uygulama hedef şemayı oluşturmaz.
+4. Tablo tarayıcısında kaynak şemayı girip **Load tables** düğmesini kullanın veya `OWNER.TABLE_NAME` ile tablo ekleyin. Yeni senaryolarda başlangıç kayıt sınırı **1**'dir.
+
+Bağlantılar ve senaryolar ilk açılışta otomatik oluşturulan `%LOCALAPPDATA%\DataBridge\application.db` içinde saklanır; ayrıca SQLite sunucusu veya `.env` dosyası hazırlamanız gerekmez. Günlükler aynı dizindeki `logs/` altındadır. Kayıtlı parolalar Windows kullanıcısına bağlı DPAPI ile korunur; başka bir geliştiricinin yerel veritabanını kopyalamak yerine bağlantılarınızı kendiniz tanımlayın.
+
+### Geliştirme sırasında doğrulama
+
+Repo kökünden paket üretmeden ön yüz derlemesini ve Java testlerini çalıştırmak için:
+
+```powershell
+.\build.ps1 -NoPackage
+```
+
+Bu komut Java paketini ve bağımlılıklarını hazırlar; yeni EXE veya `latest-build.txt` üretmez. Hazırlanan JAR'ı JDK 21 ile doğrudan çalıştırabilirsiniz:
+
+```powershell
+java -jar .\app\target\package\databridge-desktop-0.6.0.jar
+```
+
+Yalnızca ön yüz derlemesini veya hata mesajı sözleşme testlerini çalıştırmak için:
+
+```powershell
+npm.cmd --prefix frontend run build
+node --experimental-strip-types --test .\frontend\scripts\errors.test.mjs
+```
+
+Bu komutlar ilk kurulumdaki bağımlılıkların indirilmiş olmasını gerektirir. Vite geliştirme sunucusunda API proxy ve masaüstü oturum anahtarı akışı yapılandırılmamıştır; `npm run dev` tek başına tam uygulamayı başlatmaz. Tam uygulamayı EXE veya yukarıdaki JAR komutuyla açın. Standart testler için canlı Oracle gerekmez; canlı Oracle testleri ayrıca etkinleştirilmedikçe atlanır. Yerel Oracle kurulum scriptleri, örnek bağlantı dosyaları ve test raporları repoya dahil değildir.
+
 ## Çalıştırma
 
 `latest-build.txt` son uygulama klasörünü gösterir. Bu klasördeki `DataBridge.exe` ile açın.
