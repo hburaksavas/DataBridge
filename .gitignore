@@ -12,6 +12,7 @@
 .local/
 
 # Local credentials and application state.
+/jdk-path.txt
 .env
 .env.*
 !.env.example

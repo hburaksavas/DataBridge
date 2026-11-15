@@ -11,17 +11,14 @@ Desteklenen geliştirme ortamı **Windows x64**'tür. SWT ve Windows DPAPI kulla
 Önce şu araçları kurun ve yeni bir PowerShell penceresi açın:
 
 - Git.
-- **JDK 21 x64**: Yalnızca JRE yeterli değildir; `javac` ve `jpackage` bulunmalıdır. JDK'nın `bin` klasörünü PATH'e ekleyin.
+- **JDK 21 x64**: Yalnızca JRE yeterli değildir; `javac`, `jpackage` ve `jlink` bulunmalıdır. PATH'e eklemek zorunlu değildir; kullanılacak JDK aşağıdaki yerel dosyada belirtilebilir.
 - **Node.js 22.12+** ve beraberindeki npm.
 - **Microsoft Edge WebView2 Runtime x64**: Masaüstü arayüzü için gereklidir.
 
-Aşağıdaki komutlarla araçları kontrol edin. `java` ve `javac` çıktılarının ikisi de 21 olmalıdır; makinede birden fazla Java kuruluysa PATH sırasını kontrol edin.
+Aşağıdaki komutlarla diğer araçları kontrol edin. Seçilen JDK'nın sürümü derleme ve çalıştırma scriptleri tarafından doğrulanır.
 
 ```powershell
 git --version
-java -version
-javac -version
-jpackage --version
 node --version
 npm.cmd --version
 ```
@@ -31,10 +28,23 @@ npm.cmd --version
 ```powershell
 git clone https://github.com/hburaksavas/DataBridge.git
 Set-Location DataBridge
+```
+
+Repo kökünde **`jdk-path.txt`** adlı yerel bir dosya oluşturun. İçine kullanmak istediğiniz JDK'nın kök dizinini tek satır olarak, tırnak koymadan yazın (`bin` klasörünü değil):
+
+```text
+C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot
+```
+
+Kendi kurulum yolunuzu kullanın. Boşluk içeren yollar desteklenir; göreli yollar repo köküne göre çözülür. Dosya Git'e gönderilmez. Dosya yoksa veya boşsa PATH'teki `javac.exe` üzerinden JDK bulunur. Dosyada geçersiz bir yol veya 21 dışında bir JDK belirtilmişse işlem açıklayıcı hata ile durur.
+
+Ardından derleyin:
+
+```powershell
 .\build.ps1
 ```
 
-İlk derlemede npm ve Maven bağımlılıklarının indirilmesi için internet erişimi gerekir. Maven'ı ayrıca kurmanız gerekmez; script Maven 3.9.9'u `tools/` altına indirip SHA512 kontrolünü yapar. Script `JAVA_HOME` değerini PATH'te bulunan `javac.exe` üzerinden ayarlar; ön yüzü derler, Java testlerini çalıştırır ve Windows uygulama paketini üretir.
+İlk derlemede npm ve Maven bağımlılıklarının indirilmesi için internet erişimi gerekir. Maven'ı ayrıca kurmanız gerekmez; script Maven 3.9.9'u `tools/` altına indirip SHA512 kontrolünü yapar. `build.ps1` ve `run.ps1`, ortak `jdk.ps1` üzerinden seçilen JDK'yı kullanır. Scriptler işlem ortamındaki `JAVA_HOME` ve PATH'i bu JDK'ya göre ayarlar; sistemin kalıcı ayarlarını değiştirmez. Derleme, Java testleri ve paketleme aynı JDK ile yapılır. EXE paketine de bu JDK'dan çalışma ortamı eklenir.
 
 PowerShell script çalıştırmayı execution policy nedeniyle engellerse, kurum politikanız izin veriyorsa yalnızca o PowerShell oturumu için aşağıdaki komutu çalıştırıp derlemeyi yeniden başlatın:
 
@@ -71,10 +81,10 @@ Repo kökünden paket üretmeden ön yüz derlemesini ve Java testlerini çalı�
 .\build.ps1 -NoPackage
 ```
 
-Bu komut Java paketini ve bağımlılıklarını hazırlar; yeni EXE veya `latest-build.txt` üretmez. Hazırlanan JAR'ı JDK 21 ile doğrudan çalıştırabilirsiniz:
+Bu komut Java paketini ve bağımlılıklarını hazırlar; yeni EXE veya `latest-build.txt` üretmez. Hazırlanan JAR'ı aynı JDK seçimiyle çalıştırmak için:
 
 ```powershell
-java -jar .\app\target\package\databridge-desktop-0.6.0.jar
+.\run.ps1
 ```
 
 Yalnızca ön yüz derlemesini veya hata mesajı sözleşme testlerini çalıştırmak için:

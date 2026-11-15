@@ -1,9 +1,8 @@
 param([switch]$NoPackage)
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$env:JAVA_HOME = Split-Path (Split-Path (Get-Command javac.exe).Source)
-$javaVersion = & (Join-Path $env:JAVA_HOME 'bin\javac.exe') -version 2>&1
-if ("$javaVersion" -notmatch '^javac 21\.') { throw 'JDK 21 gerekiyor.' }
+. (Join-Path $PSScriptRoot 'jdk.ps1')
+Initialize-DataBridgeJdk
 $maven = Join-Path $PSScriptRoot 'tools\apache-maven-3.9.9\bin\mvn.cmd'
 if (-not (Test-Path -LiteralPath $maven)) {
     New-Item -ItemType Directory -Force 'tools' | Out-Null
