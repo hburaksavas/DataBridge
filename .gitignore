@@ -22,3 +22,20 @@
 *.sqlite-*
 *.sqlite3
 *.sqlite3-*
+
+# Local test reports and working notes.
+/*_TEST_RESULTS.md
+/oracle-*-tests.json
+/oracle-*-test-results.json
+/oracle-*-benchmark.json
+/PLAN.md
+/branding/icon-preview.png
+
+# Editor and operating-system files.
+/.idea/
+/.vscode/
+**/__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -50,7 +50,7 @@ Spring Boot yalnızca `127.0.0.1` üzerinde dinamik port açar. API çağrılar�
 
 FK olmayan ilişkiler için otomatik tahmin, gerçek maskeleme, Excel aktarımı, zamanlama, checkpoint ve kesilen aktarımı kaldığı yerden devam ettirme bu sürümde yoktur. Arayüz başarı taklidi yapmaz; mevcut işlevlerin sınırını açıkça belirtir. Yerel Oracle benchmarkında bir milyon sentetik kayıt, 256 MB JVM heap sınırıyla yaklaşık 41 saniyede aktarıldı. Bu sonuç beş basit kolonlu yerel test içindir; uzak ağ, LOB veya farklı şemalar için performans garantisi değildir.
 
-Yerel Oracle AI Database 26ai Free 23.26.3.0.0 üzerinde gerçek bağlantı ve metadata testleri yapıldı. Ayrı DATABRIDGE_TEST PDB içindeki DBRIDGE_SRC ve DBRIDGE_TGT şemaları kullanıldı. Sonuçlar oracle-live-test-results.json dosyasındadır. v0.4 ile gerçek ilişkili veri aktarımı ve bir milyon satır testi de tamamlandı; oracle-transfer-benchmark.json raporuna bakın. Otomatik testler TNS ve uyumluluk parserlarını, API yetkilendirmesini, SQLite kalıcılığını, toplu import doğrulamasını, Windows parola şifrelemesini ve senaryo kaydını kapsar.
+Yerel Oracle AI Database 26ai Free 23.26.3.0.0 üzerinde gerçek bağlantı ve metadata testleri yapıldı. Ayrı DATABRIDGE_TEST PDB içindeki DBRIDGE_SRC ve DBRIDGE_TGT şemaları kullanıldı. Canlı test raporları yerel olarak üretilir ve Git takibinde tutulmaz. Otomatik testler TNS ve uyumluluk parserlarını, API yetkilendirmesini, SQLite kalıcılığını, toplu import doğrulamasını, Windows parola şifrelemesini ve senaryo kaydını kapsar.
 
 ## Kaynak düzeni
 
@@ -97,7 +97,7 @@ Aktarım geçmişi yerel SQLite'ta saklanır; satır içerikleri veya parolalar 
 
 ## v0.5 — PK kararları
 
-Geliştirme kararları PLAN.md içinde tutulur. Veri Aktarımı ekranında tablo seçilip sağdaki **Key strategy** sekmesinden her tabloya yöntem seçilir. Hedef bağlantı seçilip metadata önerileri istenebilir; hedef bağlantının kimliği/parolası senaryo dosyasına eklenmez. Yeni senaryolar v3 JSON biçimindedir; v1/v2 senaryolar açılır ve aksi açıkça seçilmedikçe yeni güvenli varsayılan KEEP/ERROR kullanılır.
+Veri Aktarımı ekranında tablo seçilip sağdaki **Key strategy** sekmesinden her tabloya yöntem seçilir. Hedef bağlantı seçilip metadata önerileri istenebilir; hedef bağlantının kimliği/parolası senaryo dosyasına eklenmez. Yeni senaryolar v3 JSON biçimindedir; v1/v2 senaryolar açılır ve aksi açıkça seçilmedikçe yeni güvenli varsayılan KEEP/ERROR kullanılır.
 
 | Yöntem | Davranış |
 |---|---|
@@ -143,7 +143,7 @@ Connections ekranı daraltılmış iki kolonlu bir yönetim alanıdır: temel ba
 
 Senaryo seçimi ve adı tek bir aramalı combobox alanındadır. Yazarken kaydedilmiş senaryolar listelenir; ok tuşları ve Enter ile seçim yapılabilir. Yeni ad Save ile kaydedilir. Aynı ada sahip ikinci senaryo oluşturulamaz (Unicode normalizasyonu ve büyük/küçük harf farkları dahil); mevcut senaryo kendi kimliğiyle güncellenebilir.
 
-DataBridge ikonu indigo zemin üzerinde beyaz köprü kemeri ve bağlantılı diyagram düğümleridir; mercan üst düğüm ve turkuaz bağlantı hattı kullanılır. SVG, SWT PNG boyutları ve çok boyutlu Windows ICO `python branding/generate_icon.py` ile üretilir (Pillow gerekir). Boyut kontrolü için `branding/icon-preview.png` bulunur.
+DataBridge ikonu indigo zemin üzerinde beyaz köprü kemeri ve bağlantılı diyagram düğümleridir; mercan üst düğüm ve turkuaz bağlantı hattı kullanılır. SVG, SWT PNG boyutları ve çok boyutlu Windows ICO `python branding/generate_icon.py` ile üretilir (Pillow gerekir). Script ayrıca Git takibinde tutulmayan `branding/icon-preview.png` önizlemesini üretir.
 ### Oracle tablo ve şema seçimi
 
 Veri transferinde **Schema filter (optional)** boş bırakıldığında kullanıcının erişebildiği uygulama tabloları tüm şemalardan listelenir. Grant ile erişilen tablolar da `OWNER.TABLE_NAME` adıyla görünür. Filtre yalnızca listeyi daraltır; senaryodaki tablo sahibini değiştirmez. İlk tablo seçildiğinde gerçek sahibi senaryoya kaydedilir. Elle eklemede `OWNER.TABLE_NAME` kullanılabilir; yalnızca tablo adı girilirse filtre veya senaryonun sahibi kullanılır.
@@ -168,3 +168,7 @@ Mevcut transfer modeli senaryo başına tek kaynak tablo sahibini destekler. Ba�
 Bağlantı, keşif, önizleme ve aktarım hataları açıklama, **What to do** adımları ve referans kodu ile gösterilir. Kimlik doğrulama, servis/listener, ağ, grant, PK/UNIQUE/FK, kolon uyumsuzluğu, kilit, kota/alan ve snapshot hataları ayrı yönlendirme içerir. JDBC hata metni, SQL ve parolalar istemci yanıtına taşınmaz. Arka planda başarısız olan aktarımın hata ayrıntıları geçmişe kaydedilir; işlem sonucu belirsizse hedef veriyi doğrulamadan tekrar aktarım başlatılmaması belirtilir.
 
 Hata eşleme testleri Java test paketindedir. Ön yüz sözleşme testleri: `cd frontend; node --experimental-strip-types --test scripts/errors.test.mjs`.
+
+## Git kapsamı
+
+Kaynak kod, testler, scriptler, package-lock.json ve uygulama ikonları depoda tutulur. Derleme çıktıları, bağımlılıklar, yerel test raporları, PLAN.md, ikon önizlemesi, kimlik bilgileri ve yerel veritabanları `.gitignore` ile dışlanır.
