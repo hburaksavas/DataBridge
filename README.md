@@ -66,14 +66,6 @@ Masaüstü pencere SWT `Browser(SWT.EDGE)` kullanır; arayüz derlenip Spring Bo
 - [PL/SQL Developer Connection List](https://www.allroundautomations.com/products/pl-sql-developer/features/connection-list/)
 - [Java 21 jpackage](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jpackage.html)
 
-## Yerel Oracle canlı test ortamı
-
-Kurulu Oracle Free üzerinde Windows OS SYSDBA erişimiyle `scripts/provision-oracle-test.ps1` ayrı DATABRIDGE_TEST PDB ve iki test şeması oluşturur. Bu script mevcut BANKING_DB verilerine dokunmaz. Yerel kurulumun veri dosyası yolu scriptte açıkça belirtilmiştir; başka bilgisayarda kullanmadan önce kontrol edin.
-
-Kaynakta 2 müşteri, 3 kredi, 3 ödeme planı, 30 taksit, 1 tahsilat, 2 teminat ve 2 FK'siz kredi hareketi bulunur. Hedef başlangıçta 7 boş tablodur; canlı aktarım testi sonrasında 2 aktif kredinin ilişkili 33 kaydı bulunur. Kimlik bilgileri yalnızca .local/oracle-test.dpapi içinde Windows kullanıcısıyla şifreli tutulur. Kaynak/hedef bağlantıları uygulamaya da DPAPI parolalarıyla kaydedilir.
-
-Tekrar gerçek test: `./scripts/test-oracle-live.ps1`. Bu komut uygulamanın HTTP API'sine ve gerçek Oracle JDBC'ye gider; test doubles kullanmaz. Doğrudan/bileşik FK, TNS, kayıtlı parola, senaryo kalıcılığı, yanlış parola hatası ve salt okunur yazma engeli doğrulanır. Sonuç JSON'u parola içermez. OracleLiveTest normal derlemede atlanır; yalnızca canlı test scriptiyle açıkça etkinleştirilir. Bu komut, read-only engel testine ek olarak seçilen aktif kredileri ve ilişkili 33 kaydı DBRIDGE_TGT şemasına gerçekten aktarır; tekrar çalıştırınca mevcut anahtarlar atlanır.
-
 ## Gerçek Oracle aktarım akışı
 
 1. Senaryolar ekranında tabloyu keşfedin. Alt ilişki satırındaki **Alt ilişkiler** düğmesiyle ödeme planı → taksit → tahsilat gibi daha derin yolları keşfedip dahil edin. Üst kayda gidilmesi, o üst kaydın diğer alt kayıtlarını otomatik olarak seçmez.
@@ -89,10 +81,6 @@ Hedef üretim olarak etiketlenmiş veya salt okunur olamaz; yönetici rolü kull
 Mevcut kayıtlar güncellenmez. PK eşitliği kendiliğinden aynı kayıt sayılmaz; açık SKIP veya iş anahtarı eşleştirmesi gerekir. Dahil edilmeyen üst kayıtlar hedefte bulunmalıdır; hedef FK'leri eksik kayıtları reddeder. Maskeleme bu sürümde uygulanmaz; prod verisini gerçek bir test ortamına aktarmadan önce veri kullanım kurallarınızı gözetin.
 
 Aktarım geçmişi yerel SQLite'ta saklanır; satır içerikleri veya parolalar geçmişe yazılmaz. Uygulama kapanıp yeniden açıldıktan sonra çalışan görünen eski kayıtlar doğrulanmamış sonuç olarak gösterilir; otomatik devam etme yoktur.
-
-## Aktarım testlerini tekrar çalıştırma
-
-`./scripts/test-transfer-live.ps1` her çalıştırmada DATABRIDGE_TEST içinde yeni DBS_* / DBX_* test şemaları oluşturur; mevcut kaynak ve hedefe dokunmaz. Bir milyon sentetik kayıt üretir ve gerçek Oracle üzerinde kapsam, nested/composite FK, tekrar çalıştırma, snapshot, rollback, iptal, hedef ölçek kontrolü, şema değişikliği engeli ve büyük veri aktarımını test eder. JVM heap sınırı 256 MB'dır. Test şemaları silinmez; kimlik bilgileri .local/transfer-fixture-*.dpapi dosyalarında Windows hesabıyla korunur. Sık tekrarlar veritabanında yer kaplar.
 
 ## v0.5 — PK kararları
 
@@ -119,7 +107,6 @@ Anahtar eşlemeleri satır içerikleri yerine yalnızca gerekli anahtar tuple'la
 
 Yeni anahtar yolunda kayıtlar generated-key ve eşleme doğruluğu için satır bazında yazılır; yalnızca KEEP politikaları bulunan senaryolar toplu yazım yolunu kullanır. Bir milyon satır benchmarkı KEEP/SKIP yolu içindir; yeniden anahtarlama hızının ölçümü değildir.
 
-PK canlı testleri: `./scripts/test-transfer-live.ps1 -KeysOnly`. Yedi gerçek Oracle testi sequence/FK zinciri, composite FK, MAX/grup MAX, iş anahtarı, identity, varsayılan çakışma rollback ve gerçek eşzamanlı yarış davranışını kapsar. Ayrıca öneri sırasında sequence tüketilmediği ve geçici eşlemenin şifreli olduğu doğrulanır.
 
 
 ## v0.6 — Diagram ile senaryo oluşturma
@@ -130,7 +117,6 @@ FK olmayan bağlantı için üst tablonun sağ noktasını ve bağlı tablonun s
 
 Senaryo seçme, kaydetme, v3 JSON içe/dışa aktarma, önizleme ve başlatma aynı çalışma alanındadır. Diagram konumları ve tablo koşulları senaryoya kaydedilir. Start düğmesi önizlemeyi otomatik hazırlar ve modal pencerede açar. Önizleme modalındaki Start transfer ile aktarım onaylanır; İşlemler menüsünden çalıştırma ve geçmiş açılabilir; çalıştırma penceresi kapatıldığında iş arka planda devam eder. PK kararları seçili tablonun sağ panelindedir.
 
-`./scripts/test-transfer-live.ps1 -GraphOnly`: dört gerçek Oracle testi; manuel ilişki üzerinden filtreleme ve sequence ID eşlemesi, UNIQUE referansının mevcut hedef kayda eşlenmesi, geçersiz/tekil olmayan kolonların ve bağlantısız koşulların reddi. `scripts/test-oracle-live.ps1` örnek yedi tabloluk FK+manuel diagramı kaydeder ve 35 kayıt kapsamını doğrular.
 
 Uygulama ikonu `branding/databridge.ico` ile Windows EXE’ye gömülür; SWT pencere ikonları `app/src/main/resources/icons`, arayüz/favikon `frontend/public/databridge.svg` dosyalarındadır.
 
@@ -170,4 +156,6 @@ Hata eşleme testleri Java test paketindedir. Ön yüz sözleşme testleri: `cd 
 
 ## Git kapsamı
 
-Kaynak kod, testler, scriptler, package-lock.json ve uygulama ikonları depoda tutulur. Derleme çıktıları, bağımlılıklar, yerel test raporları, PLAN.md, ikon önizlemesi, kimlik bilgileri ve yerel veritabanları `.gitignore` ile dışlanır.
+Kaynak kod, testler, derleme scripti, package-lock.json ve uygulama ikonları depoda tutulur. Derleme çıktıları, bağımlılıklar, yerel test raporları, PLAN.md, ikon önizlemesi, kimlik bilgileri ve yerel veritabanları `.gitignore` ile dışlanır.
+
+Oracle kurulum ve canlı test scriptleri (`scripts/`) yerel tutulur; depoya dahil değildir.

@@ -42,3 +42,6 @@ Desktop.ini
 
 # Local connection import examples.
 /samples/
+
+# Local Oracle setup and live-test scripts.
+/scripts/
