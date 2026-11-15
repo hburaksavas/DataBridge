@@ -904,4 +904,6 @@ function Field({
     </label>
   );
 }
+document.addEventListener("contextmenu", (event) => event.preventDefault());
+
 createRoot(document.getElementById("root")!).render(<App />);
