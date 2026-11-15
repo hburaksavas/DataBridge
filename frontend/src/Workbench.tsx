@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   Save,
@@ -84,7 +84,7 @@ const blank = (): Draft => ({
   owner: "",
   table: "",
   condition: "",
-  limit: 100,
+  limit: 1,
   relations: [],
   graph: { tables: [], positions: {} },
   keyPolicies: {},
@@ -198,6 +198,24 @@ export function Workbench({
     [history, setHistory] = useState<Job[]>([]),
     [bottom, setBottom] = useState(""),
     [nodeFilter, setNodeFilter] = useState("");
+  const tableCache = useRef(new Map<string, { at: number; rows: string[] }>());
+  const metadataCache = useRef(new Map<string, { at: number; value: Meta }>());
+  const cacheTtl = 5 * 60 * 1000;
+  const [tableScroll, setTableScroll] = useState(0);
+  const tableListRef = useRef<HTMLDivElement>(null);
+  const filteredTables = useMemo(
+    () => tables.filter((t) => t.includes(search.toUpperCase())),
+    [tables, search],
+  );
+  const firstTable = Math.max(0, Math.floor(tableScroll / 36) - 5);
+  useEffect(() => {
+    setTables([]);
+    setMeta({});
+  }, [draft.sourceId, draft.owner]);
+  useEffect(() => {
+    setTableScroll(0);
+    if (tableListRef.current) tableListRef.current.scrollTop = 0;
+  }, [tables, search]);
   const draftRef = useRef(draft);
   draftRef.current = draft;
   const targetRef = useRef(targetId);
@@ -366,12 +384,26 @@ export function Workbench({
       setBusy(false);
     }
   }
-  async function describe(table: string, owner = draftRef.current.owner) {
+  async function describe(
+    table: string,
+    owner = draftRef.current.owner,
+    refresh = false,
+  ) {
     const before = draftRef.current;
     if (!before.sourceId || !owner)
       throw Error(
         "Select a source connection and enter a table as OWNER.TABLE_NAME.",
       );
+    const key = JSON.stringify([
+      profiles.find((p) => p.id === before.sourceId),
+      owner,
+      table,
+    ]);
+    const cached = metadataCache.current.get(key);
+    if (!refresh && cached && Date.now() - cached.at < cacheTtl) {
+      setMeta((m) => ({ ...m, [table]: cached.value }));
+      return cached.value;
+    }
     const info = await api<Meta>(
       "/connections/" + before.sourceId + "/discover",
       {
@@ -385,17 +417,37 @@ export function Workbench({
       before.owner !== draftRef.current.owner
     )
       throw Error("Source changed. Please try again.");
+    if (metadataCache.current.size >= 250)
+      metadataCache.current.delete(metadataCache.current.keys().next().value!);
+    metadataCache.current.set(key, { at: Date.now(), value: info });
     setMeta((m) => ({ ...m, [table]: info }));
     return info;
   }
-  async function loadTables() {
+  async function loadTables(refresh = false) {
     await perform(async () => {
       if (!draft.sourceId) throw Error("Select a source connection.");
+      const sourceId = draft.sourceId;
+      const schema = schemaFilter.trim().toUpperCase();
+      if (!schema) throw Error("Enter a schema to load its tables.");
+      const key = JSON.stringify([
+        profiles.find((p) => p.id === sourceId),
+        schema,
+      ]);
+      const cached = tableCache.current.get(key);
+      if (!refresh && cached && Date.now() - cached.at < cacheTtl) {
+        setTables(cached.rows);
+        return;
+      }
       const rows = await api<{ OWNER: string; TABLE_NAME: string }[]>(
         "/connections/" + draft.sourceId + "/tables",
-        { schema: schemaFilter, password: await passwordFor(draft.sourceId) },
+        { schema, password: await passwordFor(sourceId) },
       );
-      setTables(rows.map((t) => `${t.OWNER}.${t.TABLE_NAME}`));
+      if (sourceId !== draftRef.current.sourceId) return;
+      const names = rows.map((t) => `${t.OWNER}.${t.TABLE_NAME}`);
+      if (tableCache.current.size >= 20)
+        tableCache.current.delete(tableCache.current.keys().next().value!);
+      tableCache.current.set(key, { at: Date.now(), rows: names });
+      setTables(names);
       if (!rows.length) setNotice("No accessible application tables found.");
     });
   }
@@ -929,7 +981,7 @@ export function Workbench({
               Schema filter
               <input
                 aria-label="Source schema filter"
-                placeholder="All schemas (optional)"
+                placeholder="Schema name (required)"
                 value={schemaFilter}
                 onChange={(e) => {
                   setSchemaFilter(e.target.value.toUpperCase());
@@ -938,9 +990,19 @@ export function Workbench({
                 disabled={blocked}
               />
             </label>
-            <button disabled={blocked || !draft.sourceId} onClick={loadTables}>
+            <button
+              disabled={blocked || !draft.sourceId || !schemaFilter.trim()}
+              onClick={() => loadTables()}
+            >
               <RefreshCw size={13} />
               Load tables
+            </button>
+            <button
+              disabled={blocked || !draft.sourceId || !schemaFilter.trim()}
+              onClick={() => loadTables(true)}
+              title="Reload tables from database"
+            >
+              Refresh
             </button>
           </div>
           <div className="table-search">
@@ -951,43 +1013,66 @@ export function Workbench({
               placeholder="Search tables…"
             />
           </div>
-          <div className="table-browser-list">
+          <div
+            className="table-browser-list"
+            ref={tableListRef}
+            style={{ height: 432, flex: "0 1 432px", overflowY: "auto" }}
+            onScroll={(e) => setTableScroll(e.currentTarget.scrollTop)}
+          >
             {!tables.length ? (
               <p>Load tables or add one by name.</p>
             ) : (
-              tables
-                .filter((t) => t.includes(search.toUpperCase()))
-                .map((t) => (
-                  <button
-                    key={t}
-                    disabled={blocked}
-                    className={
-                      draft.graph.tables.some(
+              <div
+                style={{
+                  height: filteredTables.length * 36,
+                  position: "relative",
+                }}
+              >
+                {filteredTables
+                  .slice(firstTable, firstTable + 24)
+                  .map((t, index) => (
+                    <button
+                      key={t}
+                      style={{
+                        position: "absolute",
+                        top: (firstTable + index) * 36,
+                        height: 33,
+                        width: "100%",
+                        boxSizing: "border-box",
+                        margin: 0,
+                      }}
+                      disabled={blocked}
+                      className={
+                        draft.graph.tables.some(
+                          (name) => `${draft.owner}.${name}` === t,
+                        )
+                          ? "on-canvas"
+                          : ""
+                      }
+                      onClick={() =>
+                        draft.graph.tables.some(
+                          (name) => `${draft.owner}.${name}` === t,
+                        )
+                          ? selectTable(t.slice(t.indexOf(".") + 1))
+                          : addTable(t)
+                      }
+                      title={t}
+                    >
+                      <Table2 size={12} />
+                      <span>{t}</span>
+                      {draft.graph.tables.some(
                         (name) => `${draft.owner}.${name}` === t,
-                      )
-                        ? "on-canvas"
-                        : ""
-                    }
-                    onClick={() =>
-                      draft.graph.tables.some(
-                        (name) => `${draft.owner}.${name}` === t,
-                      )
-                        ? selectTable(t.slice(t.indexOf(".") + 1))
-                        : addTable(t)
-                    }
-                    title={t}
-                  >
-                    <Table2 size={12} />
-                    <span>{t}</span>
-                    {draft.graph.tables.some(
-                      (name) => `${draft.owner}.${name}` === t,
-                    ) ? (
-                      <Check size={12} />
-                    ) : (
-                      <Plus size={12} />
-                    )}
-                  </button>
-                ))
+                      ) ? (
+                        <Check size={12} />
+                      ) : (
+                        <Plus size={12} />
+                      )}
+                    </button>
+                  ))}
+              </div>
+            )}
+            {!!tables.length && !filteredTables.length && (
+              <p>No matching tables.</p>
             )}
           </div>
           <button
@@ -1191,7 +1276,11 @@ export function Workbench({
                           title="Refresh columns"
                           onClick={() =>
                             perform(async () => {
-                              await describe(selected);
+                              await describe(
+                                selected,
+                                draftRef.current.owner,
+                                true,
+                              );
                             })
                           }
                         >
@@ -1674,7 +1763,7 @@ export function Workbench({
                   placeholder="OWNER.TABLE_NAME"
                 />
                 <datalist id="source-table-names">
-                  {tables.map((t) => (
+                  {filteredTables.slice(0, 100).map((t) => (
                     <option key={t}>{t}</option>
                   ))}
                 </datalist>

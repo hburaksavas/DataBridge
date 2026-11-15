@@ -85,10 +85,13 @@ public class OracleService {
 
   public List<Map<String, Object>> tables(String id, String password, String schema)
       throws SQLException {
+    if (schema == null || schema.isBlank())
+      throw new IllegalArgumentException("A schema is required to list tables.");
+    String owner = identifier(schema.trim());
     var p = store.get(id);
     try (var c = open(p, password)) {
       readOnly(c);
-      return accessibleTables(c, schema);
+      return accessibleTables(c, owner);
     }
   }
 
