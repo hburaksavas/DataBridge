@@ -254,24 +254,25 @@ export function Workbench({
   useEffect(() => {
     if (!active(job)) return;
     let stopped = false;
-    const timer = setInterval(
-      () =>
-        api<Job>("/transfers/" + job!.id)
-          .then((j) => {
-            if (!stopped) {
-              setJob(j);
-              if (!active(j))
-                api<Job[]>("/transfers")
-                  .then(setHistory)
-                  .catch(() => {});
-            }
-          })
-          .catch((e) => setError(e.message)),
-      800,
-    );
+    const jobId = job!.id;
+    let timer = setTimeout(poll, 800);
+    async function poll() {
+      try {
+        const updated = await api<Job>("/transfers/" + jobId);
+        if (stopped) return;
+        setJob(updated);
+        if (!active(updated)) {
+          api<Job[]>("/transfers").then(setHistory).catch(() => {});
+          return;
+        }
+      } catch (e) {
+        if (!stopped) setError((e as Error).message);
+      }
+      if (!stopped) timer = setTimeout(poll, 800);
+    }
     return () => {
       stopped = true;
-      clearInterval(timer);
+      clearTimeout(timer);
     };
   }, [job?.id, job?.status]);
   useEffect(() => {

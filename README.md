@@ -75,7 +75,7 @@ Bağlantılar ve senaryolar ilk açılışta otomatik oluşturulan `%LOCALAPPDAT
 
 ### Geliştirme sırasında doğrulama
 
-Repo kökünden paket üretmeden ön yüz derlemesini ve Java testlerini çalıştırmak için:
+Repo kökünden EXE üretmeden temiz derlemeyi, ön yüz sözleşme testlerini ve Java testlerini çalıştırmak için:
 
 ```powershell
 .\build.ps1 -NoPackage
@@ -110,7 +110,7 @@ Windows x64 üzerinde JDK 21 ve Node.js 22.12+ (veya uygun daha yeni sürüm) ge
 .\build.ps1
 ```
 
-Script gerektiğinde Maven 3.9.9 indirip SHA512 kontrolü yapar; `npm ci`, TypeScript/React üretim derlemesi ve Java testlerini çalıştırır; jpackage ile tarihli `dist` klasörüne EXE ve çalışma ortamını üretir. Yalnızca doğrulama için `./build.ps1 -NoPackage` kullanılabilir. İlk derlemede internet erişimi gerekir. Node/npm ve Maven son kullanıcı paketinde gerekmez.
+Script gerektiğinde Maven 3.9.9 indirip SHA512 kontrolü yapar. Önceki Java derleme çıktılarını temizler, `npm ci`, ön yüz sözleşme testleri, TypeScript/React üretim derlemesi ve Java testlerini çalıştırır. jpackage ile tarihli `dist` klasörüne EXE ve çalışma ortamını üretir. Yalnızca doğrulama için `./build.ps1 -NoPackage` kullanılabilir. İlk derlemede internet erişimi gerekir. Node/npm ve Maven son kullanıcı paketinde gerekmez.
 
 ## v0.6 çalışan özellikler
 
