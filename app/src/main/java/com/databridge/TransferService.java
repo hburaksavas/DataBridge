@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
@@ -263,49 +264,70 @@ public class TransferService {
       List<Edge> edges = new ArrayList<>();
       Set<String> nodes = new LinkedHashSet<>();
       nodes.add(root);
+      Set<String> findings = new LinkedHashSet<>();
       for (Relation raw : req.relations) {
-        Relation r = validateRelation(source, owner, raw);
+        if (raw == null) throw new IllegalArgumentException("Invalid relationship.");
+        if (owner.equals(id(raw.childOwner))) nodes.add(id(raw.childTable));
+        if (owner.equals(id(raw.parentOwner))) nodes.add(id(raw.parentTable));
+        Relation r;
+        try {
+          r = validateRelation(source, owner, raw);
+        } catch (IllegalArgumentException ex) {
+          findings.add("Selected relationship " + id(raw.childOwner) + "." + id(raw.childTable)
+              + " / " + id(raw.constraint) + ": " + ex.getMessage());
+          continue;
+        }
         String from = r.direction.equals("PARENT") ? r.childTable : r.parentTable,
             to = r.direction.equals("PARENT") ? r.parentTable : r.childTable;
         if (from.equals(to))
-          throw new IllegalArgumentException(
-              "Self-referencing or cyclic relationships are not supported yet.");
+          findings.add("Selected relationship " + r.constraint + " returns to " + from + ".");
         edges.add(new Edge(from, to, r));
-        nodes.add(from);
-        nodes.add(to);
       }
       Map<String, List<Column>> columns = new LinkedHashMap<>();
       Map<String, List<String>> keys = new LinkedHashMap<>();
       Map<String, KeyTransferEngine.Spec> keySpecs = new LinkedHashMap<>();
       if (!nodes.containsAll(req.tableFilters.keySet()))
-        throw new IllegalArgumentException("A filtered table must be connected to the root table.");
+        findings.add("A filtered table must be connected to the root table.");
       if (!nodes.containsAll(req.keyPolicies.keySet()))
-        throw new IllegalArgumentException("A strategy table must be in the selected scope.");
+        findings.add("A strategy table must be in the selected scope.");
       for (String table : nodes) {
-        oracle.requireApplicationTable(source, owner, table);
-        oracle.requireApplicationTable(target, targetOwner, table);
-        var cols = columns(source, owner, table);
-        if (cols.isEmpty())
-          throw new IllegalArgumentException("Source table is not accessible: " + table);
-        var pk = primaryKey(source, owner, table);
-        if (pk.isEmpty()) throw new IllegalArgumentException("Primary key gerekiyor: " + table);
-        columns.put(table, cols);
-        keys.put(table, pk);
-        KeyPolicy policy = req.keyPolicies.getOrDefault(table, KeyPolicy.defaults());
-        KeyTransferEngine.Spec spec =
-            new KeyTransferEngine.Spec(
-                table,
-                cols.stream().map(Column::name).toList(),
-                pk,
-                cols.stream().collect(Collectors.toMap(Column::name, Column::type)),
-                combinedForeignKeys(source, owner, table, edges),
-                policy,
-                0);
-        keySpecs.put(table, spec);
-        checkTarget(target, targetOwner, table, cols, pk, policy);
-        KeyTransferEngine.validate(target, targetOwner, spec);
-        checkForeignKeys(source, target, owner, targetOwner, table);
+        try {
+          oracle.requireApplicationTable(source, owner, table);
+          var cols = columns(source, owner, table, message -> findings.add("Source " + message));
+          if (cols.isEmpty())
+            throw new IllegalArgumentException("Source table is not accessible: " + table);
+          var pk = primaryKey(source, owner, table);
+          if (pk.isEmpty()) findings.add("Source " + owner + "." + table + " requires an enabled primary key.");
+          columns.put(table, cols);
+          keys.put(table, pk);
+          KeyPolicy policy = req.keyPolicies.getOrDefault(table, KeyPolicy.defaults());
+          oracle.requireApplicationTable(target, targetOwner, table);
+          checkTarget(target, targetOwner, table, cols, pk, policy,
+              message -> findings.add("Target " + message));
+          checkForeignKeys(source, target, owner, targetOwner, table, findings::add);
+          if (pk.isEmpty()) continue;
+          KeyTransferEngine.Spec spec =
+              new KeyTransferEngine.Spec(
+                  table,
+                  cols.stream().map(Column::name).toList(),
+                  pk,
+                  cols.stream().collect(Collectors.toMap(Column::name, Column::type)),
+                  combinedForeignKeys(source, owner, table, edges),
+                  policy,
+                  0);
+          keySpecs.put(table, spec);
+          KeyTransferEngine.validate(target, targetOwner, spec);
+        } catch (IllegalArgumentException ex) {
+          findings.add(table + ": " + ex.getMessage());
+        }
       }
+      List<String> order = List.of();
+      try {
+        order = insertionOrder(target, targetOwner, nodes, edges);
+      } catch (IllegalArgumentException ex) {
+        findings.add(ex.getMessage());
+      }
+      if (!findings.isEmpty()) throw new SchemaCompatibilityException(findings);
       var filter =
           SelectionFilter.compile(
               req.condition,
@@ -398,7 +420,6 @@ public class TransferService {
       if (edges.stream().anyMatch(e -> e.to.equals(root)))
         throw new IllegalArgumentException(
             "Selection paths returning to the root table are not supported.");
-      List<String> order = insertionOrder(target, targetOwner, nodes, edges);
       List<DataTable> data = new ArrayList<>();
       List<TableSummary> summary = new ArrayList<>();
       long total = 0;
@@ -559,9 +580,9 @@ public class TransferService {
             table.name,
             table.columns,
             table.pk,
-            table.keySpec.policy());
+            table.keySpec.policy(), TransferService::reject);
         KeyTransferEngine.validate(plan.target, plan.targetOwner, table.keySpec);
-        checkForeignKeys(plan.source, plan.target, plan.sourceOwner, plan.targetOwner, table.name);
+        checkForeignKeys(plan.source, plan.target, plan.sourceOwner, plan.targetOwner, table.name, TransferService::reject);
       }
       job.put("status", "RUNNING");
       persist(job);
@@ -850,6 +871,15 @@ public class TransferService {
 
   private static List<Column> columns(Connection c, String owner, String table)
       throws SQLException {
+    return columns(c, owner, table, TransferService::reject);
+  }
+
+  private static void reject(String message) {
+    throw new IllegalArgumentException(message);
+  }
+
+  private static List<Column> columns(Connection c, String owner, String table, Consumer<String> issue)
+      throws SQLException {
     List<Column> cols = new ArrayList<>();
     try (var s =
         c.prepareStatement(
@@ -862,8 +892,7 @@ public class TransferService {
       try (var rs = s.executeQuery()) {
         while (rs.next()) {
           if (rs.getString(3).equals("YES"))
-            throw new IllegalArgumentException(
-                "Tables with virtual columns are not supported yet: " + table);
+            issue.accept(owner + "." + table + "." + rs.getString(1) + " is a virtual column.");
           String type = rs.getString(2).replaceAll("\\(\\d+\\)", "");
           if (!Set.of(
                   "NUMBER",
@@ -878,8 +907,7 @@ public class TransferService {
                   "BINARY_FLOAT",
                   "BINARY_DOUBLE")
               .contains(type))
-            throw new IllegalArgumentException(
-                "Unsupported data type: " + table + "." + rs.getString(1) + " / " + type);
+            issue.accept(owner + "." + table + "." + rs.getString(1) + " has unsupported data type " + type + ".");
           cols.add(
               new Column(
                   rs.getString(1),
@@ -924,11 +952,11 @@ public class TransferService {
       String table,
       List<Column> source,
       List<String> keys,
-      KeyPolicy policy)
+      KeyPolicy policy, Consumer<String> issue)
       throws SQLException {
-    var target = columns(c, owner, table);
+    var target = columns(c, owner, table, issue);
     if (!source.equals(target) || !keys.equals(primaryKey(c, owner, table)))
-      throw new IllegalArgumentException(
+      issue.accept(
           "Source and target columns, types and primary keys must match: " + table);
     if (count(
             c,
@@ -937,7 +965,7 @@ public class TransferService {
                     + " status='ENABLED'",
                 List.of(owner, table)))
         > 0)
-      throw new IllegalArgumentException(
+      issue.accept(
           "Targets with enabled triggers are not supported yet: " + table);
     if (count(
             c,
@@ -946,28 +974,28 @@ public class TransferService {
                     + " generation_type='ALWAYS' AND column_name<>?",
                 List.of(owner, table, policy.mode().equals("IDENTITY") ? policy.column() : " ")))
         > 0)
-      throw new IllegalArgumentException(
+      issue.accept(
           "GENERATED ALWAYS identity is not supported for this strategy: " + table);
   }
 
   private static void checkForeignKeys(
-      Connection source, Connection target, String sourceOwner, String targetOwner, String table)
+      Connection source, Connection target, String sourceOwner, String targetOwner, String table, Consumer<String> issue)
       throws SQLException {
-    if (!foreignKeyShapes(source, sourceOwner, table)
-        .equals(foreignKeyShapes(target, targetOwner, table)))
-      throw new IllegalArgumentException("Source and target foreign key structures must match: " + table);
+    if (!foreignKeyShapes(source, sourceOwner, table, message -> issue.accept("Source " + message))
+        .equals(foreignKeyShapes(target, targetOwner, table, message -> issue.accept("Target " + message))))
+      issue.accept("Source and target foreign key structures must match: " + table);
   }
 
-  private static List<String> foreignKeyShapes(Connection connection, String owner, String table)
+  private static List<String> foreignKeyShapes(Connection connection, String owner, String table, Consumer<String> issue)
       throws SQLException {
     Map<String, StringBuilder> shapes = new TreeMap<>();
     try (var statement =
         connection.prepareStatement(
             "SELECT"
-                + " fk.constraint_name,pk.owner,pk.table_name,fc.column_name,pc.column_name,fk.status,fk.validated"
-                + " FROM all_constraints fk JOIN all_constraints pk ON pk.owner=fk.r_owner AND"
+                + " fk.constraint_name,fk.r_owner,pk.table_name,fc.column_name,pc.column_name,fk.status,fk.validated"
+                + " FROM all_constraints fk LEFT JOIN all_constraints pk ON pk.owner=fk.r_owner AND"
                 + " pk.constraint_name=fk.r_constraint_name JOIN all_cons_columns fc ON"
-                + " fc.owner=fk.owner AND fc.constraint_name=fk.constraint_name JOIN"
+                + " fc.owner=fk.owner AND fc.constraint_name=fk.constraint_name LEFT JOIN"
                 + " all_cons_columns pc ON pc.owner=pk.owner AND"
                 + " pc.constraint_name=pk.constraint_name AND pc.position=fc.position WHERE"
                 + " fk.owner=? AND fk.table_name=? AND fk.constraint_type='R' ORDER BY"
@@ -976,11 +1004,12 @@ public class TransferService {
       statement.setString(2, table);
       try (var rows = statement.executeQuery()) {
         while (rows.next()) {
-          if (!owner.equals(rows.getString(2))
-              || !"ENABLED".equals(rows.getString(6))
-              || !"VALIDATED".equals(rows.getString(7)))
-            throw new IllegalArgumentException(
-                "Cross-schema, disabled or unvalidated foreign keys are not supported: " + table);
+          String constraint = owner + "." + table + " / " + rows.getString(1);
+          if (!owner.equals(rows.getString(2)))
+            issue.accept(constraint + " references another schema (" + rows.getString(2)
+                + "." + Objects.toString(rows.getString(3), "(inaccessible parent)") + ").");
+          if (!"ENABLED".equals(rows.getString(6)) || !"VALIDATED".equals(rows.getString(7)))
+            issue.accept(constraint + " is " + rows.getString(6) + " / " + rows.getString(7) + ".");
           shapes
               .computeIfAbsent(rows.getString(1), k -> new StringBuilder())
               .append(rows.getString(3))
@@ -1135,7 +1164,8 @@ public class TransferService {
         }
       if (!advanced)
         throw new IllegalArgumentException(
-            "Target foreign keys contain a cycle. Automatic transfer is not supported.");
+            "Target foreign keys contain a cycle. Tables awaiting insertion: " + tables.stream()
+                .filter(t -> !order.contains(t)).collect(Collectors.joining(", ")));
     }
     return order;
   }

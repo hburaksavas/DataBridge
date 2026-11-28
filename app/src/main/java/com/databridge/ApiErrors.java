@@ -10,6 +10,12 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class ApiErrors {
+  @ExceptionHandler(SchemaCompatibilityException.class)
+  ResponseEntity<Map<String, Object>> schemaCompatibility(SchemaCompatibilityException e) {
+    return ResponseEntity.badRequest().body(new ErrorGuidance.Failure("SCHEMA_COMPATIBILITY",
+        e.getMessage(), List.of("Review the listed objects, adjust the selection or use a compatible test schema, then run the preview again."), null).body());
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   ResponseEntity<Map<String, Object>> validation(IllegalArgumentException e) {
     return ResponseEntity.badRequest().body(ErrorGuidance.validation(e.getMessage()).body());
